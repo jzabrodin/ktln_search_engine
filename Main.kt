@@ -2,18 +2,16 @@ package search
 
 import java.io.File
 
-val map = mutableMapOf<String,List<Int>>()
+val map = mutableMapOf<String, MutableList<Int>>()
 
 class SearchEngine {
     fun search(input: List<String>, word: String): Unit {
         val result = mutableListOf<String>()
         val wordProcessed = word.trim().lowercase()
 
-        input.forEach { s ->
-            val trim = s.lowercase().trim()
-            val isWordPresented = trim.contains(wordProcessed)
-            if (isWordPresented) {
-                result.add(s)
+        map[wordProcessed]?.forEach {
+            if (it < input.size) {
+                result.add(input[it])
             }
         }
 
@@ -69,9 +67,7 @@ class InputHelper {
 
 class MenuProcessor(private val inputData: List<String>) {
     enum class Options(val option: Int) {
-        FIND(1),
-        PRINT(2),
-        EXIT(0);
+        FIND(1), PRINT(2), EXIT(0);
 
         companion object {
             fun isCorrectValue(x: Int): Boolean {
@@ -129,10 +125,32 @@ class DataPrinter() {
     }
 }
 
+class IndexCreator {
+    fun create(x: List<String>) {
+        var lineNumber = 0
+        x.forEach { string ->
+            // string loop
+            string.trim().split(" ").forEach { word ->
+                // word loop
+                val s = word.lowercase()
+                val list = map[s];
+                if (list != null) {
+                    list.add(lineNumber)
+                } else {
+                    val mutableListOf = mutableListOf<Int>()
+                    mutableListOf.add(lineNumber)
+                    map[s] = mutableListOf;
+                }
+            }
+            lineNumber++
+        }
+    }
+}
+
 fun main(args: Array<String>) {
     var inputData: MutableList<String> = mutableListOf()
 
-    if(args.isEmpty()){
+    if (args.isEmpty()) {
         val collector = DataCollector()
         inputData = collector.collect()
     } else {
@@ -140,6 +158,9 @@ fun main(args: Array<String>) {
         val file = File(path)
         file.forEachLine { inputData.add(it.trim()) }
     }
+
+    val indexCreator = IndexCreator()
+    indexCreator.create(inputData)
 
     val menuProcessor = MenuProcessor(inputData)
     menuProcessor.process()
